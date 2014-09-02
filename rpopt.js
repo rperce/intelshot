@@ -82,19 +82,58 @@ var empty = function(func) {
     onEmpty = func;
 }
 
-function isShort(arg) { return /^-[^-]/.test(arg); }
-function isLong(arg) { return /^--.+/.test(arg); }
+function isShort(arg) { return /^-[^-]/.test(arg) && !(/\s/.test(arg)); }
+function isLong(arg) { return /^--.+/.test(arg) && !(/\s/.test(arg)); }
 function isOpt(arg) { return isShort(arg) || isLong(arg); }
 function getOpt(arg) {
-    if(!isOpt(arg)) return null;
-    args.forEach(function(a) {
-    if(a.lopt === 
+    var ret = null;
+    if(isShort(arg)) {
+        args.some(function(a) {
+            if(a.sopt === arg.charAt(1)) {
+                ret = a;
+                return true;
+            }
+        });
+    } else if(isLong(arg)) {
+        args.some(function(a) {
+            var name = arg.substring(2,
+                /=/.test(arg) ? arg.indexOf('=') : arg.length);
+            if(a.lopt === name) {
+                ret = a;
+                return true;
+            }
+        });
+    }
+    return ret;
+}
 var parse = function(args) {
     for(i=0; i<args.length; i++) {
         var arg = args[i];
         if (!isOpt(arg)) continue;
-        
-
+        var optargs = [];
+        var opt = getOpt(arg);
+        if(opt.argc > 0) {
+            if(isShort(arg)) {
+                var nospace = /^(-[^-])(.*)/.exec(arg)[2]
+                if(nospace.length > 0) optargs.push(nospace);
+            } else if(isLong(arg)) {
+                var posteql = /^(--[^=]+=?)(.*)/.exec(arg)[2];
+                if(posteql.length > 0) optargs.push(posteql);
+            }
+            for(j=i+1; j<args.length; j++) {
+                if(!isOpt(args[j]) && args[j].length > 0) {
+                    optargs.push(args[j]);
+                }
+            }
+        }
+        if(optargs.length < opt.argc) {
+            console.log('Error: too few arguments for option '+arg+'.');
+            return;
+        } else if(optargs.length > opt.argc) {
+            console.log('Error: too many arguments to option '+arg+'.');
+            return;
+        }
+        opt.func.apply(this, optargs);
     }
 }
 module.exports.on = on;
