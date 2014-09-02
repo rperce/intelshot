@@ -1,3 +1,8 @@
+var opt = require('./rpoptjs/rpopt.js');
+
+phantom.exit();
+
+//==========
 // TODO: JSON configuration file for each run has profile,
 //       dir, viewport size, lat, long, zoom, and timestamps
 var profile = '0my3q5yz.default';
