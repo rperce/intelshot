@@ -7,6 +7,14 @@ opt.on("c config", function(file) { cfgfile = file; },
         "Run using config FILE");
 opt.parse(require('system').args);
 
+var months=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+var days=['sun','mon','tue','wed','thu','fri','sat'];
+var times = [
+    'Thu Sep 04 2014 17:06:00 GMT-0500',
+    'Thu Sep 04 2014 17:07:00 GMT-0500',
+    'Thu Sep 04 2014 17:08:00 GMT-0500'
+];
+var delay = 42;
 // to enforce selecting exactly one option, make sure they're neither both not 
 // set nor both set, effectively just an XNOR
 if (!genfile == !cfgfile) {
@@ -17,12 +25,19 @@ if (!genfile == !cfgfile) {
 
 console.log("Genfile: "+genfile);
 console.log("Cfgfile: "+cfgfile);
-//phantom.exit();
-
+if(!cfgfile) {
+    console.log("ONLY GIVE CONFIG NOW PLZ");
+    phantom.exit();
+}
+var cfg = require('./'+cfgfile);
+cfg.timing.forEach(function(t) {
+    console.log(new Date(t.time)+" ("+t.mins+")");
+});
+phantom.exit();
 //==========
 // TODO: JSON configuration file for each run has profile,
 //       dir, viewport size, lat, long, zoom, and timestamps
-var profile = '0my3q5yz.default';
+var profile = '99lgwcgi.default';
 var sql = "SELECT * FROM moz_cookies WHERE host = \"www.ingress.com\"";
 var dir = '/home/robert/.mozilla/firefox/' + profile + '/cookies.sqlite';
 
@@ -76,14 +91,7 @@ Object.keys(cks).forEach(function(key) {
     ));
 });
 
-// wait until the cookie-scraping child program does its thing to try loading a
-// webpage to prevent sadness and a lack of authentication
-child.on("exit", function(code) {
-    if(code != 0) {
-        console.log("ERROR: exit code " + code);
-        phantom.exit();
-    };
-
+function takeScreenshot(afterpage) {
     var page = require('webpage').create();
     page.viewportSize = { width: 1900, height: 1000 };
     page.open('http://ingress.com/intel/', function (status) {
@@ -97,11 +105,58 @@ child.on("exit", function(code) {
             // and links.  I've never had 42 not work, it might be able to
             // go lower.  TODO: it'll be configurable.
             window.setTimeout(function() {
-                page.render('foo.png');
-                phantom.exit();
-            }, 42 * 1000);
+                var now = new Date();
+                page.render(
+                    days[now.getDay()]+'_'+
+                    months[now.getMonth()]+'_'+
+                    pad(now.getDate())+'_'+
+                    now.getFullYear()+'_'+
+                    pad(now.getHours())+'.'+
+                    pad(now.getMinutes())+'.'+
+                    pad(now.getSeconds())+'.png'
+                );
+                page.close();
+                afterpage();
+            }, delay * 1000);
         }
     });
+}
+// wait until the cookie-scraping child program does its thing to try loading a
+// webpage to prevent sadness and a lack of authentication
+child.on("exit", function(code) {
+    if(code != 0) {
+        console.log("ERROR: exit code " + code);
+        phantom.exit();
+    };
+    for(i=0; i<times.length; i++) {
+        times[i] = new Date(times[i]) - (delay * 1000);
+        console.log("Adjusted: "+new Date(times[i]));
+    }
+    function ssTimer(i) {
+        console.log(i+"|Taking screenshot at "+(new Date()));
+        var now = new Date();
+        takeScreenshot(function() {
+            if (i+1 >= times.length) {
+                console.log("End");
+                phantom.exit();
+                return;
+            }
+            setTimeout(function() {
+                ssTimer(i+1);
+            }, new Date(times[i+1]) - new Date());
+        });
+    }
+
+    console.log("Timeout for 0 in "+(new Date(times[0])-new Date())+"ms.");
+    var i = 0;
+    while (new Date(times[i]) < new Date()) {
+        i++;
+    }
+    if (i+1 < times.length) {
+        setTimeout(function() {
+            ssTimer(0);
+        }, new Date(times[0]) - new Date());
+    }
 });
 
 // returns an object representing a cookie in the format that phantomjs expects.
@@ -116,3 +171,7 @@ function gencookie(values) {
         'expires':  values[6]
     };
 };
+
+function pad(n) {
+    return (n < 10 ? '0' : '') + n;
+}
