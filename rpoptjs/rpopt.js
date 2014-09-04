@@ -121,7 +121,8 @@ var parse = function(args) {
                 if(posteql.length > 0) optargs.push(posteql);
             }
             for(j=i+1; j<args.length; j++) {
-                if(!isOpt(args[j]) && args[j].length > 0) {
+                if(isOpt(args[j])) break;
+                if(args[j].length > 0) {
                     optargs.push(args[j]);
                 }
             }
