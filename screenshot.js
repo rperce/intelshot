@@ -1,6 +1,23 @@
 var opt = require('./rpoptjs/rpopt.js');
+var genfile = null;
+var cfgfile = null;
+opt.on("g generate", function(file) { genfile = file; },
+        "Generate a default config named FILE.json");
+opt.on("c config", function(file) { cfgfile = file; },
+        "Run using config FILE");
+opt.parse(require('system').args);
 
-phantom.exit();
+// to enforce selecting exactly one option, make sure they're neither both not 
+// set nor both set, effectively just an XNOR
+if (!genfile == !cfgfile) {
+    console.log("Please provide exactly one of the options.\n")
+    opt.printUsage();
+    phantom.exit();
+}
+
+console.log("Genfile: "+genfile);
+console.log("Cfgfile: "+cfgfile);
+//phantom.exit();
 
 //==========
 // TODO: JSON configuration file for each run has profile,
@@ -53,10 +70,14 @@ Object.keys(cks).forEach(function(key) {
     phantom.addCookie(gencookie(
         ['ingress.intelmap.' + key, cks[key],
         'www.ingress.com', '/', 'false', 'false',
+        // arbitrarily, let it expire a week from now.  Expiry expects
+        // milliseconds.
         (new Date()).getTime() + (7 * 24 * 60 * 60 * 1000)]
     ));
 });
 
+// wait until the cookie-scraping child program does its thing to try loading a
+// webpage to prevent sadness and a lack of authentication
 child.on("exit", function(code) {
     if(code != 0) {
         console.log("ERROR: exit code " + code);
@@ -67,6 +88,8 @@ child.on("exit", function(code) {
     page.viewportSize = { width: 1900, height: 1000 };
     page.open('http://ingress.com/intel/', function (status) {
         if (status !== 'success') {
+            // theoretically other things can go wrong, I think, but that's the
+            // only thing I've ever had cause problems:
             console.log('Unable to access the network!');
             phantom.exit();
         } else {
