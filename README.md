@@ -15,7 +15,9 @@ Then do the following:
 * Find your firefox profile (probably in `~/.mozilla/firefox/`) and
   get the name of your profile, probably a jumble of characters and then
   `.default`.
-* Run `phantomjs screenshot.js -g` to generate an example configuration file
+* Run `phantomjs screenshot.js -g demo.json` to generate an example
+  configuration file (or call it something else, but I'll refer to the generated
+  thing as `demo.json` in this file).
 * Open `demo.json` and input your firefox profile under `ff_profile`.
 * Edit `ff_dir`, at the bottom, to be your firefox directory if it's somewhere
   other than indicated.  The directory given in `ff_dir` should directly contain
@@ -45,14 +47,12 @@ Then do the following:
   run as many in parallel as you like. Don't get yourself banned for
   abusing the intel page, though.
 
-Finally, to run it, just do `phantomjs screenshot.js -c demo.json`, or whatever
-you named your json file. Enjoy your screenshots!
+Finally, to run it, just do `phantomjs screenshot.js -c demo.json`.  Enjoy your
+screenshots!
 
 If you only want a single screenshot to check your setup or whatever add `-f`.
 
 Coming Soon
 -----------
-* Multiple views in one configuration file
-* Output directory per view
 * Image cropping
 
