@@ -26,6 +26,7 @@ function wrap(str, len, brk, first) {
 
 var args = [];
 var usage, subtitle, onEmpty;
+var reset = function() { args = []; }
 var on = function(scmd, action, desc) {
     var cmd = scmd.trim();
     var req = false;
@@ -44,7 +45,8 @@ var on = function(scmd, action, desc) {
         'argc': action.length,
         'argv': ' ' + argv.join(', ').toUpperCase(),
         'func': action,
-        'desc': desc
+        'desc': desc,
+        'set': false
     });
 };
 
@@ -58,7 +60,7 @@ var subtitle = function(str) {
 
 var printUsage = function(header) {
     if (header === null) header = true;
-    if(header && usage) {
+    if (header && usage) {
         console.log('Usage: ' + usage + (subtitle ? '\n' + subtitle : '') + '\n');
     }
     console.log('Options:');
@@ -87,18 +89,18 @@ function isLong(arg) { return /^--.+/.test(arg) && !(/\s/.test(arg)); }
 function isOpt(arg) { return isShort(arg) || isLong(arg); }
 function getOpt(arg) {
     var ret = null;
-    if(isShort(arg)) {
+    if (isShort(arg)) {
         args.some(function(a) {
-            if(a.sopt === arg.charAt(1)) {
+            if (a.sopt === arg.charAt(1)) {
                 ret = a;
                 return true;
             }
         });
-    } else if(isLong(arg)) {
+    } else if (isLong(arg)) {
         args.some(function(a) {
             var name = arg.substring(2,
                 /=/.test(arg) ? arg.indexOf('=') : arg.length);
-            if(a.lopt === name) {
+            if (a.lopt === name) {
                 ret = a;
                 return true;
             }
@@ -112,34 +114,63 @@ var parse = function(args) {
         if (!isOpt(arg)) continue;
         var optargs = [];
         var opt = getOpt(arg);
-        if(opt.argc > 0) {
-            if(isShort(arg)) {
+        if (opt.argc > 0) {
+            if (isShort(arg)) {
                 var nospace = /^(-[^-])(.*)/.exec(arg)[2]
-                if(nospace.length > 0) optargs.push(nospace);
-            } else if(isLong(arg)) {
+                if (nospace.length > 0) optargs.push(nospace);
+            } else if (isLong(arg)) {
                 var posteql = /^(--[^=]+=?)(.*)/.exec(arg)[2];
-                if(posteql.length > 0) optargs.push(posteql);
+                if (posteql.length > 0) optargs.push(posteql);
             }
             for(j=i+1; j<args.length; j++) {
-                if(isOpt(args[j])) break;
-                if(args[j].length > 0) {
+                if (isOpt(args[j])) break;
+                if (args[j].length > 0) {
                     optargs.push(args[j]);
                 }
             }
         }
-        if(optargs.length < opt.argc) {
+        if (optargs.length < opt.argc) {
             console.log('Error: too few arguments for option '+arg+'.');
             return;
-        } else if(optargs.length > opt.argc) {
+        } else if (optargs.length > opt.argc) {
             console.log('Error: too many arguments to option '+arg+'.');
             return;
         }
+        opt.set = true;
+        opt.argv = optargs;
         opt.func.apply(this, optargs);
     }
 }
+
+var query = function(name) {
+    if (name.charAt(0) != '-') {
+        name = '-' + name;
+    }
+    var opt = getOpt(name);
+    if (opt === null) {
+        throw new Error('No option we know how to handle given.');
+    }
+
+    var argv = opt.argv;
+    if (!argv) {
+        throw new Error('Run parse on arguments before accessing them');
+    }
+    if(!opt.set) return false;
+    switch(argv.length) {
+        case 0:
+            return opt.set;
+        case 1:
+            return argv[0];
+        default:
+            return argv;
+    }
+}
+
+module.exports = query;
 module.exports.on = on;
 module.exports.printUsage = printUsage;
 module.exports.calledBy = calledBy;
 module.exports.subtitle = subtitle;
 module.exports.parse = parse;
 module.exports.empty = empty;
+module.exports.reset = reset;
