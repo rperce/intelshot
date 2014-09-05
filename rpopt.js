@@ -44,6 +44,7 @@ var on = function(scmd, action, desc) {
         'reqd': req,
         'argc': action.length,
         'argv': ' ' + argv.join(', ').toUpperCase(),
+        '_argv': null,
         'func': action,
         'desc': desc,
         'set': false
@@ -152,9 +153,6 @@ var query = function(name) {
     }
 
     var argv = opt._argv;
-    if (!argv) {
-        error('run parse on arguments before accessing them');
-    }
     if(!opt.set) return false;
     switch(argv.length) {
         case 0:
