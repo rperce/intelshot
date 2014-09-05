@@ -24,9 +24,10 @@ if (!opt('g') == !opt('c')) {
 if(opt('g')) {
     if(fs.exists(opt('g'))) {
         error(opt('g')+' exists already');
+    } else {
+        fs.write(opt('g'), generateDefaultConfig(), 'w');
+        phantom.exit();
     }
-    fs.write(opt('g'), generateDefaultConfig(), 'w');
-    phantom.exit();
 }
 var cfg = require('./'+opt('c'));
 var tmg = cfg.timing;
