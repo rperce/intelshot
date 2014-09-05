@@ -152,9 +152,6 @@ var query = function(name) {
     }
 
     var argv = opt._argv;
-    if (!argv) {
-        error('run parse on arguments before accessing them');
-    }
     if(!opt.set) return false;
     switch(argv.length) {
         case 0:

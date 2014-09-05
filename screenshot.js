@@ -12,6 +12,7 @@ opt.error(function(msg) {
     phantom.exit();
 });
 opt.parse(require('system').args);
+
 // to enforce selecting exactly one option, make sure they're neither both not
 // set nor both set, effectively just an XNOR
 if (!opt('g') == !opt('c')) {
@@ -24,7 +25,7 @@ if(opt('g')) {
     if(fs.exists(opt('g'))) {
         error(opt('g')+' exists already');
     }
-    fs.write(generateDefaultConfig(), './demo.json', 'w');
+    fs.write(opt('g'), generateDefaultConfig(), 'w');
     phantom.exit();
 }
 var cfg = require('./'+opt('c'));
