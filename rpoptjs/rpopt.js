@@ -130,10 +130,10 @@ var parse = function(args) {
             }
         }
         if (optargs.length < opt.argc) {
-            console.log('Error: too few arguments for option '+arg+'.');
+            error('too few arguments for option '+arg+'.');
             return;
         } else if (optargs.length > opt.argc) {
-            console.log('Error: too many arguments to option '+arg+'.');
+            error('too many arguments to option '+arg+'.');
             return;
         }
         opt.set = true;
@@ -148,12 +148,12 @@ var query = function(name) {
     }
     var opt = getOpt(name);
     if (opt === null) {
-        throw new Error('No option we know how to handle given.');
+        error('no option we know how to handle given.');
     }
 
     var argv = opt.argv;
     if (!argv) {
-        throw new Error('Run parse on arguments before accessing them');
+        error('run parse on arguments before accessing them');
     }
     if(!opt.set) return false;
     switch(argv.length) {
@@ -165,6 +165,16 @@ var query = function(name) {
             return argv;
     }
 }
+var error = function(err) {
+    console.log('Error: '+err);
+}
+var setOnError = function(func) {
+    if(func.length!=1) {
+        throw new Error('Error function must take one argument');
+    }
+    error = func;
+}
+
 
 module.exports = query;
 module.exports.on = on;
@@ -174,3 +184,4 @@ module.exports.subtitle = subtitle;
 module.exports.parse = parse;
 module.exports.empty = empty;
 module.exports.reset = reset;
+module.exports.error = onError;
