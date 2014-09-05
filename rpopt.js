@@ -184,4 +184,4 @@ module.exports.subtitle = subtitle;
 module.exports.parse = parse;
 module.exports.empty = empty;
 module.exports.reset = reset;
-module.exports.error = onError;
+module.exports.error = setOnError;
