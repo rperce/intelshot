@@ -1,4 +1,5 @@
 var opt = require('./rpoptjs/rpopt.js');
+var username = 'robert'
 var genfile = null;
 var cfgfile = null;
 opt.on("g generate", function(file) { genfile = file; },
@@ -9,12 +10,12 @@ opt.parse(require('system').args);
 
 var months=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
 var days=['sun','mon','tue','wed','thu','fri','sat'];
-var times = [
-    'Thu Sep 04 2014 17:06:00 GMT-0500',
-    'Thu Sep 04 2014 17:07:00 GMT-0500',
-    'Thu Sep 04 2014 17:08:00 GMT-0500'
-];
-var delay = 42;
+//var times = [
+//    'Thu Sep 04 2014 17:06:00 GMT-0500',
+//    'Thu Sep 04 2014 17:07:00 GMT-0500',
+//    'Thu Sep 04 2014 17:08:00 GMT-0500'
+//];
+var load_delay = 45;
 // to enforce selecting exactly one option, make sure they're neither both not 
 // set nor both set, effectively just an XNOR
 if (!genfile == !cfgfile) {
@@ -30,16 +31,13 @@ if(!cfgfile) {
     phantom.exit();
 }
 var cfg = require('./'+cfgfile);
-cfg.timing.forEach(function(t) {
-    console.log(new Date(t.time)+" ("+t.mins+")");
-});
-phantom.exit();
+var tmg = cfg.timing;
 //==========
 // TODO: JSON configuration file for each run has profile,
 //       dir, viewport size, lat, long, zoom, and timestamps
 var profile = '99lgwcgi.default';
 var sql = "SELECT * FROM moz_cookies WHERE host = \"www.ingress.com\"";
-var dir = '/home/robert/.mozilla/firefox/' + profile + '/cookies.sqlite';
+var dir = '/home/' + username + '/.mozilla/firefox/' + profile + '/cookies.sqlite';
 
 // child_process is a phantomjs module that allows for running of external
 // commands.  spawn does node-style event handling for stdout/stderr; fileExec
@@ -103,8 +101,9 @@ function takeScreenshot(afterpage) {
         } else {
             // we wait for timeout to allow the page to load all the portals
             // and links.  I've never had 42 not work, it might be able to
-            // go lower.  TODO: it'll be configurable.
+            // go lower.
             window.setTimeout(function() {
+                console.log(load_delay * 1000);
                 var now = new Date();
                 page.render(
                     days[now.getDay()]+'_'+
@@ -117,7 +116,7 @@ function takeScreenshot(afterpage) {
                 );
                 page.close();
                 afterpage();
-            }, delay * 1000);
+            }, load_delay * 1000);
         }
     });
 }
@@ -128,35 +127,52 @@ child.on("exit", function(code) {
         console.log("ERROR: exit code " + code);
         phantom.exit();
     };
-    for(i=0; i<times.length; i++) {
-        times[i] = new Date(times[i]) - (delay * 1000);
-        console.log("Adjusted: "+new Date(times[i]));
+    for(i=0; i<tmg.length; i++) {
+        tmg[i].time = new Date(tmg[i].time) - (load_delay * 1000);
+        console.log("Adjusted: "+new Date(tmg[i].time));
+        console.log("   Delay: "+tmg[i].secs);
     }
-    function ssTimer(i) {
+    function ssTimer(last, i) {
         console.log(i+"|Taking screenshot at "+(new Date()));
         var now = new Date();
         takeScreenshot(function() {
-            if (i+1 >= times.length) {
-                console.log("End");
+            var delay = tmg[i].secs;
+            if(delay === "end") {
+                console.log("done");
                 phantom.exit();
-                return;
             }
+            delay *= 1000;
+            var next = new Date(last + delay);
+
+            if((new Date(tmg[i+1].time)-0) < ((now-0) + delay)) {
+                i += 1;
+                delay = tmg[i].secs;
+                if (delay === "end") {
+                    console.log("done");
+                    phantom.exit();
+                }
+                next = new Date(tmg[i].time);
+            }
+            console.log("Delay: "+(next - Date.now()));
             setTimeout(function() {
-                ssTimer(i+1);
-            }, new Date(times[i+1]) - new Date());
+                ssTimer(next-0, i);
+            }, next - Date.now());
         });
     }
 
-    console.log("Timeout for 0 in "+(new Date(times[0])-new Date())+"ms.");
     var i = 0;
-    while (new Date(times[i]) < new Date()) {
-        i++;
-    }
-    if (i+1 < times.length) {
-        setTimeout(function() {
-            ssTimer(0);
-        }, new Date(times[0]) - new Date());
-    }
+    tmg.some(function(t) {
+        var then = new Date(t.time);
+        if(then > new Date()) {
+            var j = i;
+            console.log("Wait "+(then - new Date()) +" for "+j);
+            setTimeout(function() {
+                ssTimer(then-0, j);
+            }, then - new Date());
+            return true;
+        }
+        i += 1;
+    });
 });
 
 // returns an object representing a cookie in the format that phantomjs expects.
