@@ -2,20 +2,19 @@ var opt = require('./rpoptjs/rpopt.js');
 var username = 'robert'
 var genfile = null;
 var cfgfile = null;
+var force = false;
 opt.on("g generate", function(file) { genfile = file; },
         "Generate a default config named FILE.json");
 opt.on("c config", function(file) { cfgfile = file; },
         "Run using config FILE");
+opt.on("f force", function() { force = true; },
+        "Take a single screenshot right now");
 opt.parse(require('system').args);
 
 var months=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
 var days=['sun','mon','tue','wed','thu','fri','sat'];
-//var times = [
-//    'Thu Sep 04 2014 17:06:00 GMT-0500',
-//    'Thu Sep 04 2014 17:07:00 GMT-0500',
-//    'Thu Sep 04 2014 17:08:00 GMT-0500'
-//];
 var load_delay = 45;
+
 // to enforce selecting exactly one option, make sure they're neither both not 
 // set nor both set, effectively just an XNOR
 if (!genfile == !cfgfile) {
