@@ -137,7 +137,7 @@ var parse = function(args) {
             return;
         }
         opt.set = true;
-        opt.argv = optargs;
+        opt._argv = optargs;
         opt.func.apply(this, optargs);
     }
 }
@@ -151,7 +151,7 @@ var query = function(name) {
         error('no option we know how to handle given.');
     }
 
-    var argv = opt.argv;
+    var argv = opt._argv;
     if (!argv) {
         error('run parse on arguments before accessing them');
     }
