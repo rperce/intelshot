@@ -44,6 +44,7 @@ var on = function(scmd, action, desc) {
         'reqd': req,
         'argc': action.length,
         'argv': ' ' + argv.join(', ').toUpperCase(),
+        '_argv': null,
         'func': action,
         'desc': desc,
         'set': false
