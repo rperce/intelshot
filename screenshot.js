@@ -10,7 +10,7 @@ opt.on("f force", function() {},
 opt.error(function(msg) {
     console.log(msg);
     phantom.exit();
-}
+});
 opt.parse(require('system').args);
 // to enforce selecting exactly one option, make sure they're neither both not
 // set nor both set, effectively just an XNOR
