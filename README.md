@@ -22,10 +22,10 @@ The following needs to be done manually:
 * If your internet is weird and the intel page takes more than 45 seconds to
   load, edit `load_delay` on line 18.
 * Edit the `cks` object on line 76 to contain the info you want. Don't change
-  shift; I have no idea what that does.
+  `shift`; I have no idea what that does.
 * Edit demo.json (feel free to rename it) to contain your desired timing.
   Follow the format of the file. The `secs` field is the number of seconds
-  between screenshots.  This cannot be less than or equal to load_delay, and
+  between screenshots.  This cannot be less than or equal to `load_delay`, and
   things might go wonky if it's not at least five or ten seconds larger to
   account for possible page-load bizarreness.  Feel free to add more points at
   which the timing changes; theoretically, the RAM's the limit. The "end" timing
