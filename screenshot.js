@@ -7,8 +7,11 @@ opt.on("c config", function(file) {},
         "Run using config FILE");
 opt.on("f force", function() {},
         "Take a single screenshot right now");
+opt.error(function(msg) {
+    console.log(msg);
+    phantom.exit();
+}
 opt.parse(require('system').args);
-
 // to enforce selecting exactly one option, make sure they're neither both not
 // set nor both set, effectively just an XNOR
 if (!opt('g') == !opt('c')) {
@@ -17,8 +20,11 @@ if (!opt('g') == !opt('c')) {
     phantom.exit();
 }
 
-if (!opt('c')) {
-    console.log("ONLY GIVE CONFIG FOR NOW PLZ");
+if(opt('g')) {
+    if(fs.exists(opt('g'))) {
+        error(opt('g')+' exists already');
+    }
+    fs.write(generateDefaultConfig(), './demo.json', 'w');
     phantom.exit();
 }
 var cfg = require('./'+opt('c'));
