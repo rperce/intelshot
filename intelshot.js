@@ -172,7 +172,7 @@ execFile('sqlite3', [dir, sql], sqopts, function(errcode, stdout, stderr) {
 // method is called
 function takeScreenshot(afterpage) {
     var page = require('webpage').create();
-    page.viewportSize = { width: cfg.width, height: cfg.height };
+    page.viewportSize = { width: cfg.width + 80, height: cfg.height + 350 };
     page.open('http://ingress.com/intel/', function (status) {
         if (status !== 'success') {
             // theoretically other things can go wrong, I think, but that's
@@ -185,6 +185,12 @@ function takeScreenshot(afterpage) {
             window.setTimeout(function() {
                 console.log(load_delay * 1000);
                 var now = new Date();
+                page.clipRect = {
+                    left: 20,
+                    top: 150,
+                    width: cfg.width,
+                    height: cfg.height
+                };
                 page.render(cfg.outputDir+'/'+
                     days[now.getDay()]+'_'+
                     months[now.getMonth()]+'_'+
