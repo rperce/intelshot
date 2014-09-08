@@ -113,9 +113,6 @@ execFile('sqlite3', [dir, sql], sqopts, function(errcode, stdout, stderr) {
             phantom.exit();
         });
     } else {
-        console.log("Done to 90");
-        phantom.exit();
-
         // this is inside the callback in order to wait until the cookie-scraping
         // child program does its thing to try loading a webpage to prevent sadness
         // and a lack of authentication
