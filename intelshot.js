@@ -30,6 +30,15 @@ if(opt('g')) {
     }
 }
 var cfg = require('./'+opt('c'));
+if (cfg.link) {
+    console.log(cfg.link)
+    var parts = cfg.link.match(/ll=(.+?),(.+?)&z=(\d{1,2})/)
+    console.log('link! ',parts)
+    cfg.lat = parts[1]
+    cfg.lng = parts[2]
+    cfg.zoom= parts[3]
+}
+console.log('lat ',cfg.lat,'; lng ',cfg.lng,'; zoom ',cfg.zoom)
 var tmg = cfg.timing;
 var load_delay = cfg.load_delay;
 var dir = cfg.ff_dir + cfg.ff_profile + '/cookies.sqlite';
@@ -88,8 +97,7 @@ execFile('sqlite3', [dir, sql], sqopts, function(errcode, stdout, stderr) {
     //.trim() prevents empty entry at end
     var split = stdout.trim().split("\n");
     var rows = split.map(function(val) { return val.split('|'); });
-    // there will always be three cookies unless Google changes their backend
-    for(i = 0; i < 3; i++) {
+    for(i = 0; i < rows.length; i++) {
         // in the sqlite database firefox uses for cookies, the columns
         // we care about, in order, are 4, 5, 6, 7, 12, 11, and 8. See
         // gencookie, below.
@@ -238,6 +246,7 @@ function validateConfig(cfg) {
     var demo = JSON.parse(generateDefaultConfig());
     Object.keys(demo).forEach(function(key) {
         if(!(cfg[key])) {
+            if (!(key === 'lat' || key === 'lng' || key === 'zoom' && cfg.link))
             error(key+' is not defined in given config');
         }
     });
